@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .chat-container {
+            width: 90%;
+            max-width: 800px;
+            height: 90vh;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: linear-gradient(90deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: 600;
+        }
+
+        .session-input {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .session-input input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .session-input button {
+            padding: 8px 16px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .session-input button:hover {
+            background: #0056b3;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 6px;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+            background: #f1f3f4;
+            color: #333;
+            border-bottom-left-radius: 6px;
+        }
+
+        .message.streaming {
+            position: relative;
+        }
+
+        .message.streaming::after {
+            content: '|';
+            animation: blink 1s infinite;
+            color: #667eea;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            min-height: 44px;
+            max-height: 120px;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 22px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .message-input:focus {
+            border-color: #667eea;
+        }
+
+        .send-button {
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: scale(1.05);
+        }
+
+        .send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .status {
+            padding: 10px 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+            background: #f8f9fa;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+        }
+
+        .connected {
+            background: #efe;
+            color: #363;
+        }
+    </style>
+</head>
+<body>
+<div class="chat-container">
+    <div class="chat-header">
+        Chat Interface
+    </div>
+
+    <div class="session-input">
+        <label for="sessionId">Session ID:</label>
+        <input type="text" id="sessionId" placeholder="Enter session ID (optional)" />
+        <button onclick="setSession()">Set Session</button>
+        <span id="currentSession" style="font-size: 12px; color: #666;"></span>
+    </div>
+
+    <div class="messages-container" id="messagesContainer">
+        <div class="message assistant">
+            Hello! I'm ready to help you. Type your message below to start chatting.
+        </div>
+    </div>
+
+    <div class="status" id="status">Ready</div>
+
+    <div class="input-container">
+            <textarea
+                    id="messageInput"
+                    class="message-input"
+                    placeholder="Type your message..."
+                    rows="1"
+            ></textarea>
+        <button class="send-button" id="sendButton" onclick="sendMessage()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+        </button>
+    </div>
+</div>
+
+<script>
+    let currentSessionId = 'fd850390-65e7-4d63-9e76-7c9d90c2fa12';
+    let isStreaming = false;
+
+    // Auto-resize textarea
+    const messageInput = document.getElementById('messageInput');
+    messageInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+
+    // Handle Enter key
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    function setSession() {
+        const sessionInput = document.getElementById('sessionId');
+        const sessionId = sessionInput.value.trim();
+
+        if (sessionId) {
+            currentSessionId = sessionId;
+            document.getElementById('currentSession').textContent = `Current: ${currentSessionId}`;
+            updateStatus('Session set to: ' + currentSessionId, 'connected');
+        } else {
+            currentSessionId = 'default-session';
+            document.getElementById('currentSession').textContent = '';
+            updateStatus('Using default session', 'connected');
+        }
+    }
+
+    function updateStatus(message, type = '') {
+        const status = document.getElementById('status');
+        status.textContent = message;
+        status.className = 'status ' + type;
+    }
+
+    function addMessage(content, isUser = false, isStreaming = false) {
+        const container = document.getElementById('messagesContainer');
+        const message = document.createElement('div');
+        message.className = `message ${isUser ? 'user' : 'assistant'}${isStreaming ? ' streaming' : ''}`;
+        message.textContent = content;
+        container.appendChild(message);
+        container.scrollTop = container.scrollHeight;
+        return message;
+    }
+
+    function sendMessage() {
+        if (isStreaming) return;
+
+        const input = document.getElementById('messageInput');
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        // Add user message
+        addMessage(message, true);
+        input.value = '';
+        input.style.height = 'auto';
+
+        // Prepare for streaming
+        isStreaming = true;
+        document.getElementById('sendButton').disabled = true;
+        updateStatus('Sending message...');
+
+        // Create assistant message for streaming
+        const assistantMessage = addMessage('', false, true);
+        let accumulatedResponse = '';
+
+        // Make the request
+        fetch('/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                sessionId: currentSessionId,
+                message: message
+            })
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                updateStatus('Receiving response...');
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+
+                function readStream() {
+                    return reader.read().then(({ done, value }) => {
+                        if (done) {
+                            // Stream completed
+                            assistantMessage.classList.remove('streaming');
+                            isStreaming = false;
+                            document.getElementById('sendButton').disabled = false;
+                            updateStatus('Ready');
+                            return;
+                        }
+
+                        // Decode chunk and parse SSE format
+                        const chunk = decoder.decode(value, { stream: true });
+
+                        // Parse SSE data: lines
+                        const lines = chunk.split('\n');
+                        for (const line of lines) {
+                            if (line.startsWith('data:')) {
+                                const data = line.substring(5).trim();
+                                if (data) {
+                                    // Check if we need a space before adding new data
+                                    const needsSpace = accumulatedResponse.length > 0 &&
+                                        !accumulatedResponse.endsWith(' ') &&
+                                        !data.match(/^[.,!?:;)}\]"']/) &&
+                                        !accumulatedResponse.match(/[({["'\s]$/);
+
+                                    accumulatedResponse += (needsSpace ? ' ' : '') + data;
+                                }
+                            }
+                        }
+
+                        assistantMessage.textContent = accumulatedResponse;
+
+                        // Continue reading
+                        return readStream();
+                    });
+                }
+
+                return readStream();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                assistantMessage.textContent = 'Error: ' + error.message;
+                assistantMessage.classList.remove('streaming');
+                assistantMessage.style.background = '#fee';
+                assistantMessage.style.color = '#c33';
+
+                isStreaming = false;
+                document.getElementById('sendButton').disabled = false;
+                updateStatus('Error occurred', 'error');
+            });
+    }
+
+    // Initialize
+    document.getElementById('currentSession').textContent = `Current: ${currentSessionId}`;
+    updateStatus('Ready to chat!', 'connected');
+</script>
+</body>
+</html>
