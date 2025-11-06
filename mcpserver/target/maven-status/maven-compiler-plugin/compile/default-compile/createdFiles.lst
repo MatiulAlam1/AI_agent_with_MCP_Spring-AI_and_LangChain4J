@@ -1,11 +1,11 @@
-com\dep\mcpServer\McpServerApplication.class
-com\dep\mcpServer\enums\OrderStatus.class
-com\dep\mcpServer\services\OrderService.class
 com\dep\mcpServer\repositories\UserRepository.class
-com\dep\mcpServer\services\UserService.class
 com\dep\mcpServer\repositories\OrderRepository.class
 com\dep\mcpServer\entities\User.class
 com\dep\mcpServer\records\OrderDetails.class
+com\dep\mcpServer\entities\Order.class
+com\dep\mcpServer\McpServerApplication.class
+com\dep\mcpServer\enums\OrderStatus.class
+com\dep\mcpServer\services\OrderService.class
+com\dep\mcpServer\services\UserService.class
 com\dep\mcpServer\entities\Product.class
 com\dep\mcpServer\configurations\ToolsConfig.class
-com\dep\mcpServer\entities\Order.class

@@ -2,16 +2,22 @@ version: '3.8'
 
 services:
   postgres_db:
-    image: postgres:latest
+    image: postgres:15-alpine
+    container_name: postgres_db
     restart: always
     environment:
-      POSTGRES_DB: postgres        # Database name
-      POSTGRES_USER: postgres      # Username
-      POSTGRES_PASSWORD: myPass    # Password
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: myPass
     ports:
-      - "5432:5432"
+      - "5433:5432"  # Host port 5433 avoids conflicts
     volumes:
-      - db_data:/var/lib/postgresql/data  # Persist database data
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   db_data:

@@ -1,4 +1,4 @@
 -------------------------------------------------------------------------------
 Test set: com.dep.mcpServer.McpServerApplicationTests
 -------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 8.591 s -- in com.dep.mcpServer.McpServerApplicationTests
+Tests run: 1, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.691 s -- in com.dep.mcpServer.McpServerApplicationTests
